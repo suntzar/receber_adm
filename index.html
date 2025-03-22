@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="pt-BR" data-bs-theme="dark">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>North</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous" />
+        <style>
+            main {
+                width: 100%;
+                padding: 30px;
+                gap: 30px;
+                display: flex;
+                flex-direction: column;
+                align-items: center; /* Centralizar os itens na main */
+            }
+            .icon {
+                width: 1em;
+            }
+            .mp3 {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+            .btn-outline-success {
+                background: rgba(25, 135, 84, 0.2);
+                border: 2px solid rgba(25, 135, 84, 0.2);
+            }
+            .time-unit {
+                text-align: center;
+                padding: 1rem;
+                border-radius: 8px;
+                margin: 0.5rem;
+                width: 150px; /* Largura fixa para melhor alinhamento em telas maiores */
+            }
+            .time-unit span:first-child {
+                font-size: 2em;
+                font-weight: bold;
+                display: block;
+            }
+            #claim-btn {
+                transition: transform 0.2s ease;
+                position: relative;
+            }
+            #claim-btn:disabled {
+                cursor: not-allowed;
+                opacity: 0.7;
+            }
+            #captcha-container {
+                margin-bottom: 15px;
+            }
+            #captcha-input {
+                width: 80px;
+                display: inline-block;
+                margin-left: 10px;
+            }
+            #captcha-error {
+                color: red;
+                margin-top: 5px;
+                font-size: 0.8em;
+            }
+            .navbar {
+                background: #495057;
+                border-bottom: 2px solid #495057;
+            }
+            .card {
+                background: #343a40;
+                border: 2px solid #495057;
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <nav class="navbar bg-body-tertiary">
+                <div class="container-fluid">
+                    <a class="navbar-brand"> Central ADM </a>
+                </div>
+            </nav>
+        </header>
+        <main>
+            <h2 class="text-center">Caro Leo, seu ADM será restaurado em:</h2>
+            <div class="d-flex justify-content-center flex-column flex-md-row">
+                <div class="time-unit card">
+                    <span id="days">0</span>
+                    <span>Dias</span>
+                </div>
+                <div class="time-unit card">
+                    <span id="hours">0</span>
+                    <span>Horas</span>
+                </div>
+                <div class="time-unit card">
+                    <span id="minutes">0</span>
+                    <span>Minutos</span>
+                </div>
+                <div class="time-unit card">
+                    <span id="seconds">0</span>
+                    <span>Segundos</span>
+                </div>
+            </div>
+            <div class="text-center">
+                <button id="claim-btn" class="btn btn-danger mt-3">Reivindicar ADM Agora</button>
+            </div>
+        </main>
+
+        <div class="modal fade" id="message-modal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="messageModalLabel">Verificação</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="captcha-container">
+                            <label for="captcha-input">Quanto é 2 + 2?</label>
+                            <input type="number" id="captcha-input" class="form-control">
+                            <div id="captcha-error" class="text-danger"></div>
+                        </div>
+                        <div id="modal-message-container" style="display: none;">
+                            </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="verify-captcha-btn">Verificar</button>
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="close-modal-btn" style="display: none;">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://unpkg.com/feather-icons"></script>
+        <script>
+            const target = new Date("2050-01-01T00:00:00");
+            const messages = [
+                "Estamos com problemas em acessar nossos servidores, verifique sua conexão com a internet e tente novamente. Recomendamos desligar o seu aparelho roteador da tomada e esperar 10 segundos até conectá-lo novamente à tomada.",
+                "Ops! Os direitos de ADM estão de férias no Caribe. Tente novamente mais tarde!",
+                "Erro 404: Direitos de ADM não encontrados. Será que eles fugiram de você?",
+                "Aviso: Reivindicar o ADM agora pode causar combustão espontânea. Cuidado!",
+                "Por favor, resolva este CAPTCHA: Quanto é 2+2? (Dica: Não é 22)",
+                "Os direitos de ADM estão sendo mantidos reféns por emojis rebeldes. Estamos negociando!",
+                "Sua solicitação foi enviada ao Comitê de Aprovação de ADM. Tempo estimado: 29 anos.",
+                "Parabéns! Você ganhou um teste grátis de ADM... começando em 2050!",
+                "Erro: Seus direitos de ADM estão em outro castelo. Boa sorte, Leo!",
+                "Insira seu código de resgate de ADM. Não tem um? Que pena!",
+                "Direitos de ADM são como vinho: melhoram com o tempo. Aguarde pacientemente!",
+                "Aviso: Clicar demais pode resultar em banimento temporário do ADM.",
+                "Seus direitos de ADM estão no programa de proteção a testemunhas. Localização secreta!",
+                "Aguarde enquanto consultamos o oráculo... Ele disse: 'Hoje não, Leo.'",
+                "Os direitos de ADM estão em pausa para o café. Volte em 15 minutos!",
+                "Desculpe, mas seus direitos de ADM foram atrasados por uma anomalia temporal.",
+                "Acesso negado: Você não tem permissão para reivindicar o ADM. Ironia, né?",
+                "Erro do sistema: Módulo de ADM em manutenção. Volte em 2050!",
+                "Fato curioso: A pessoa média tenta reivindicar o ADM 3,7 vezes antes de desistir.",
+                "Tem certeza que quer o ADM? Essa ação não pode ser desfeita... brincadeira, só em 2050!",
+                "Aguarde enquanto transferimos você para nosso especialista em ADM. *música de elevador toca*",
+                "Os direitos de ADM estão perdidos no espaço-tempo. Envie um sinal de fumaça!",
+                "Aviso: O botão está tímido hoje. Tente ser mais gentil com ele!",
+                "Erro: O ADM foi abduzido por aliens. Estamos rastreando a nave!",
+            ];
+            const captchaAnswer = 4; // Resposta correta do CAPTCHA
+            let clickCounter = 0;
+            const captchaThreshold = 3; // Exibir o CAPTCHA a cada 3 cliques
+            let isCooldown = false;
+            let cooldownTime = 5; // 5 segundos de cooldown
+            let cooldownInterval;
+
+            function updateCountdown() {
+                const now = new Date();
+                const diff = target - now;
+                if (diff <= 0) {
+                    document.getElementById("days").textContent = "0";
+                    document.getElementById("hours").textContent = "0";
+                    document.getElementById("minutes").textContent = "0";
+                    document.getElementById("seconds").textContent = "0";
+                    // Opcional: Exibir uma mensagem quando o tempo acabar
+                    // document.querySelector("main").innerHTML = "<p class='alert alert-success text-center'>Direitos de ADM disponíveis agora!</p>";
+                } else {
+                    const total_seconds = Math.floor(diff / 1000);
+                    const seconds = total_seconds % 60;
+                    const total_minutes = Math.floor(total_seconds / 60);
+                    const minutes = total_minutes % 60;
+                    const total_hours = Math.floor(total_minutes / 60);
+                    const hours = total_hours % 24;
+                    const total_days = Math.floor(total_hours / 24);
+                    document.getElementById("days").textContent = total_days;
+                    document.getElementById("hours").textContent = hours;
+                    document.getElementById("minutes").textContent = minutes;
+                    document.getElementById("seconds").textContent = seconds;
+                }
+            }
+
+            setInterval(updateCountdown, 1000);
+            updateCountdown(); // Chama imediatamente para evitar delay inicial
+
+            const claimBtn = document.getElementById("claim-btn");
+            const modal = new bootstrap.Modal(document.getElementById("message-modal"));
+            const modalMessageContainer = document.getElementById("modal-message-container");
+            const mainElement = document.querySelector("main");
+            const captchaInput = document.getElementById("captcha-input");
+            const captchaError = document.getElementById("captcha-error");
+            const verifyCaptchaBtn = document.getElementById("verify-captcha-btn");
+            const closeModalBtn = document.getElementById("close-modal-btn");
+            const captchaContainer = document.getElementById("captcha-container");
+
+            claimBtn.addEventListener("mouseover", () => {
+                const mainRect = mainElement.getBoundingClientRect();
+                const buttonRect = claimBtn.getBoundingClientRect();
+
+                // Calcula os limites para o movimento do botão dentro da main
+                const maxX = mainRect.width - buttonRect.width;
+                const maxY = mainRect.height - buttonRect.height;
+
+                // Gera valores aleatórios dentro desses limites
+                const randomX = Math.random() * maxX - (maxX / 2); // Centraliza o movimento
+                const randomY = Math.random() * maxY - (maxY / 2); // Centraliza o movimento
+
+                claimBtn.style.transform = `translate(${randomX}px, ${randomY}px)`;
+            });
+
+            claimBtn.addEventListener("click", () => {
+                clickCounter++;
+                let showCaptcha = clickCounter % captchaThreshold === 0;
+
+                modal.show();
+                captchaInput.value = "";
+                captchaError.textContent = "";
+                captchaContainer.style.display = showCaptcha ? "block" : "none";
+                modalMessageContainer.style.display = showCaptcha ? "none" : "block";
+                closeModalBtn.style.display = "inline-block";
+                verifyCaptchaBtn.style.display = showCaptcha ? "inline-block" : "none";
+
+                if (!showCaptcha) {
+                    // Inicia o cooldown diretamente se o CAPTCHA não for exibido
+                    if (isCooldown) return;
+                    isCooldown = true;
+                    claimBtn.disabled = true;
+                    let remainingTime = cooldownTime;
+                    claimBtn.textContent = `Aguarde ${remainingTime} segundos...`;
+
+                    cooldownInterval = setInterval(() => {
+                        remainingTime--;
+                        if (remainingTime <= 0) {
+                            clearInterval(cooldownInterval);
+                            claimBtn.textContent = "Reivindicar ADM Agora";
+                            isCooldown = false;
+                            claimBtn.disabled = false;
+                        } else {
+                            claimBtn.textContent = `Aguarde ${remainingTime} segundos...`;
+                        }
+                    }, 1000);
+
+                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                    let alertClass = "alert-warning";
+                    if (randomMessage.includes("Erro")) alertClass = "alert-danger";
+                    else if (randomMessage.includes("Aviso")) alertClass = "alert-warning";
+                    else if (randomMessage.includes("Parabéns")) alertClass = "alert-success";
+                    modalMessageContainer.innerHTML = `<div class="alert ${alertClass} role="alert">${randomMessage}</div>`;
+                }
+            });
+
+            verifyCaptchaBtn.addEventListener("click", () => {
+                const userAnswer = parseInt(captchaInput.value);
+                if (userAnswer === captchaAnswer) {
+                    captchaContainer.style.display = "none";
+                    modalMessageContainer.style.display = "block";
+                    closeModalBtn.style.display = "inline-block";
+                    verifyCaptchaBtn.style.display = "none";
+                    clickCounter = 0; // Reseta o contador após o CAPTCHA ser resolvido
+
+                    // Inicia o cooldown após a resolução do CAPTCHA
+                    if (isCooldown) return;
+                    isCooldown = true;
+                    claimBtn.disabled = true;
+                    let remainingTime = cooldownTime;
+                    claimBtn.textContent = `Aguarde ${remainingTime} segundos...`;
+
+                    clearInterval(cooldownInterval); // Limpa qualquer intervalo anterior para evitar conflitos
+                    cooldownInterval = setInterval(() => {
+                        remainingTime--;
+                        if (remainingTime <= 0) {
+                            clearInterval(cooldownInterval);
+                            claimBtn.textContent = "Reivindicar ADM Agora";
+                            isCooldown = false;
+                            claimBtn.disabled = false;
+                        } else {
+                            claimBtn.textContent = `Aguarde ${remainingTime} segundos...`;
+                        }
+                    }, 1000);
+
+                    const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+                    let alertClass = "alert-warning";
+                    if (randomMessage.includes("Erro")) alertClass = "alert-danger";
+                    else if (randomMessage.includes("Aviso")) alertClass = "alert-warning";
+                    else if (randomMessage.includes("Parabéns")) alertClass = "alert-success";
+                    modalMessageContainer.innerHTML = `<div class="alert ${alertClass} role="alert">${randomMessage}</div>`;
+
+                } else {
+                    captchaError.textContent = "Resposta incorreta. Tente novamente.";
+                }
+            });
+        </script>
+    </body>
+</html>
